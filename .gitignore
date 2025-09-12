@@ -52,3 +52,17 @@ CodeCoverage/
 *.VisualState.xml
 TestResult.xml
 nunit-*.xml
+
+
+ Entity Framework Migrations
+!Migrations/
+
+# SQLite database file
+*.db
+*.sqlite
+
+# User secrets
+secrets.json
+
+# VS Code settings (optional)
+.vscode/

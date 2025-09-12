@@ -11,10 +11,12 @@ namespace Moodify.Api.Models
 
         public string SportifyPlaylistId { get; set; } = null!;
 
-        public Guid? UserId { get; set; }
-        public User? User{ get; set; } 
+        public Guid UserId { get; set; }
+        public User User { get; set; } = null!;
 
-        public ICollection<Track> Tracks { get; set; } = new List<Track>();
+        public string Description { get; set; } = null!;
+
+        public ICollection<PlaylistTrack> PlaylistTracks { get; set; } = new List<PlaylistTrack>();
 
 
 
