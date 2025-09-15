@@ -4,8 +4,8 @@ namespace Moodify.Api.Repositories.Interfaces
 {
     public interface ITrackRepository
     {
-        Task<IEnumerable<Track>> GetAllTracksAsync();
-        Task<Track> GetTrackByIdAsync(Guid id);
+        Task<IEnumerable<Track>> GetAllAsync();
+        Task<Track?> GetByIdAsync(Guid id);
         Task<bool> SaveChangesAsync();
     }
 } 

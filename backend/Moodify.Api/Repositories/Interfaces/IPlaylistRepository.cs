@@ -7,7 +7,7 @@ namespace Moodify.Api.Repositories.Interfaces{
 
         Task<IEnumerable<Playlist?>> GetUserPlaylistsAsync(Guid userId);
 
-        Task<Playlist?> GetPlaylistByIdAsync(Guid playlistId);
+        Task<Playlist?> GetByIdAsync(Guid playlistId);
 
         Task<bool> SaveChangesAsync();
 

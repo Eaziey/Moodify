@@ -14,10 +14,10 @@ namespace Moodify.Api.Repositories
         {
             _context = context;
         }
-        public async Task<IEnumerable<Track>> GetAllTracksAsync() {
+        public async Task<IEnumerable<Track>> GetAllAsync() {
             return await _context.Tracks.ToListAsync();
         }
-        public async Task<Track> GetTrackByIdAsync(Guid id)
+        public async Task<Track?> GetByIdAsync(Guid id)
         {
             var task = await _context.Tracks.FirstOrDefaultAsync(track => track.Id == id);
 

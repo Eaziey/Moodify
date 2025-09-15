@@ -19,7 +19,7 @@ namespace Moodify.Api.Repositories{
                     .ThenInclude(pt => pt.Track).ToListAsync();
         }
 
-        public async Task<Playlist?> GetPlaylistByIdAsync(Guid playlistId)
+        public async Task<Playlist?> GetByIdAsync(Guid playlistId)
         {
             return await _context.Playlists.Include(p => p.PlaylistTracks)
                 .ThenInclude(pt => pt.Track)
