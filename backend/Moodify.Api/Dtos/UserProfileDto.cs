@@ -10,6 +10,6 @@ namespace Moodify.Api.Dtos
 
         public string Email { get; set; } = null!;
 
-        public ICollection<PlaylistSummaryDto> Playlists { get; set; } = new List<PlaylistSummaryDto>();
+        public ICollection<PlaylistSummaryDto> Playlists { get; set; } = [];
     }
 }

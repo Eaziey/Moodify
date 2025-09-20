@@ -1,14 +1,14 @@
 using Moodify.Api.Models;
 using Moodify.Api.Services.IServices;
-using Moodify.Api.Repositories;
+using Moodify.Api.Repositories.Interfaces;
 
 namespace Moodify.Api.Services
 {
     public class TrackService : ITrackService
     {
-        private readonly TrackRepository _repository;
+        private readonly ITrackRepository _repository;
 
-        public TrackService(TrackRepository repository){
+        public TrackService(ITrackRepository repository){
 
             _repository = repository;
         

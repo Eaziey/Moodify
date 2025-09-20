@@ -1,14 +1,14 @@
 using Moodify.Api.Models;
 using Moodify.Api.Services.IServices;
-using Moodify.Api.Repositories;
+using Moodify.Api.Repositories.Interfaces;
 
 namespace Moodify.Api.Services{
 
     public class PlaylistService : IPlaylistService
     {
-        private readonly PlaylistRepository _repository;
+        private readonly IPlaylistRepository _repository;
 
-        public PlaylistService(PlaylistRepository repository)
+        public PlaylistService(IPlaylistRepository repository)
         {
             _repository = repository;
         }

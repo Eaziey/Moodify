@@ -1,5 +1,5 @@
 using Moodify.Api.Models;
-using Moodify.Api.Repositories;
+using Moodify.Api.Repositories.Interfaces;
 using Moodify.Api.Services.IServices;
 
 namespace Moodify.Api.Services
@@ -7,11 +7,11 @@ namespace Moodify.Api.Services
     public class UserService : IUserService
     {
 
-        private readonly UserRepository _repository;
+        private readonly IUserRepository _repository;
 
-        public UserService(UserRepository repository)
+        public UserService(IUserRepository repository)
         {
-            _repository = repository;   
+            _repository = repository;
         }
         public async Task<User?> GetUserByIdAsync(Guid id)
         {
@@ -45,12 +45,15 @@ namespace Moodify.Api.Services
                 return false;
             }
 
+
+
             await _repository.AddAsync(user);
 
             var result = await _repository.SaveChangesAsync();
 
             return result;
         }
-    
+
+        
     }
 }
