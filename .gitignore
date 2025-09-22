@@ -53,8 +53,7 @@ CodeCoverage/
 TestResult.xml
 nunit-*.xml
 
-
- Entity Framework Migrations
+#Entity Framework Migrations
 !Migrations/
 
 # SQLite database file
