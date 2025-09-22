@@ -40,8 +40,6 @@ namespace Moodify.Api.Data
 
         }
 
-         /*
-            I am doing this app for my portfolio nothing too crazy so do you think I should make the app just get playlists from sportify based on moods or should I get tracks and create playlists
-         */
+        
     }
 }
