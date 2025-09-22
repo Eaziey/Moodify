@@ -1,9 +1,9 @@
 using System;
 using System.Collections.Generic;
 
-namespace Moodify.Api.Models
+namespace Moodify.Api.Dtos
 {
-    public class Playlist
+    public class PlaylistDto
     {
         public Guid Id { get; set; }
         public string Mood { get; set; } = null!;
@@ -12,13 +12,10 @@ namespace Moodify.Api.Models
         public string SportifyPlaylistId { get; set; } = null!;
 
         public Guid UserId { get; set; }
-        public User User { get; set; } = null!;
 
         public string Description { get; set; } = null!;
 
-        public ICollection<PlaylistTrack> PlaylistTracks { get; set; } = new List<PlaylistTrack>();
-
-
+        public ICollection<PlaylistTrackDto> PlaylistTracks { get; set; } = new List<PlaylistTrackDto>();
 
     }
 }

@@ -5,7 +5,7 @@ namespace Moodify.Api.Models
 {
     public class Track
     {
-        public Guid TrackId { get; set; }
+        public Guid Id { get; set; }
 
         public string TrackName { get; set; } = null!;
         public string Artist { get; set; } = null!;
@@ -13,10 +13,6 @@ namespace Moodify.Api.Models
 
         public string AlbumArtUrl { get; set; } = null!;
 
-        public Guid PlaylistId { get; set; }
-
-        public Playlist Playlist { get; set; } = null!;
-
-
+        public ICollection<PlaylistTrack> PlaylistTracks { get; set; } = new List<PlaylistTrack>();
     }
 }
