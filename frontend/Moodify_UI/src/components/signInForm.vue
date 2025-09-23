@@ -1,7 +1,6 @@
-
 <template>
 
-<div class="min-vh-100 w-100 border border-danger d-flex justify-content-center align-items-center">
+<div class="py-5 border border-primary w-100 d-flex justify-content-center align-items-center">
     <form class="border d-flex flex-column p-5 h-75 w-75">
         <h1 class="text-primary align-self-center mb-5">Register</h1>
 
@@ -24,7 +23,12 @@
             <span class="input-group-text border-start-0 bg-transparent hover-pointer p-2">#</span>
         </div>
 
-        <button type="submit" class="btn btn-outline-success rounded-2 w-50 align-self-center mt-4">Sign In</button>
+        <button 
+            type="submit" 
+            class="btn btn-outline-success rounded-2 w-50 align-self-center mt-4"
+            @click = "SignIn">
+                Sign In
+        </button>
         
         <div class="d-flex flex-row justify-content-center mt-5">
             <p class="align-self-center">Or</p>
@@ -42,7 +46,13 @@
 
 <script>
 export default{
-    name: 'SignInForm'
+    name: 'SignInForm',
+    methods: {
+        SignIn(e){
+            e.preventDefault();
+            this.$router.push("/home");
+        }
+    }
 }
 
 </script>
