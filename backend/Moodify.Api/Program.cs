@@ -26,6 +26,16 @@ builder.Services.AddScoped<IPlaylistService, PlaylistService>();
 builder.Services.AddScoped<ITrackService, TrackService>();
 builder.Services.AddScoped<IAuthService, AuthService>();
 
+builder.Services.AddCors(options =>
+{
+    options.AddPolicy("AllowFrontend", policy =>
+    {
+        policy.WithOrigins("https://opulent-space-giggle-qj7pgx5r9rx3x9pj-5173.app.github.dev")
+            .AllowAnyHeader()
+            .AllowAnyMethod();
+    });
+});
+
 var app = builder.Build();
 
 // Configure the HTTP request pipeline.
@@ -35,7 +45,10 @@ if (app.Environment.IsDevelopment())
     app.UseSwaggerUI();
 }
 
+
+app.UseCors("AllowFrontend");  
 app.MapControllers();
+app.UseAuthorization();
 app.UseHttpsRedirection();
 
 app.Run();

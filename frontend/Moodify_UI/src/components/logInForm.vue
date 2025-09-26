@@ -6,11 +6,21 @@
 
         <div class="input-group align-self-center my-3 input-w">
             <span class="input-group-text p-2">@</span>
-            <input type="text" class="form-control p-2" placeholder="Username"/>
+            <input 
+                type="text" 
+                class="form-control p-2" 
+                placeholder="Email"
+                v-model="user.Email"
+            />
         </div>
         <div class="input-group align-self-center my-3 input-w">
             <span class="input-group-text p-2">@</span>
-            <input type="password" class="form-control border-end-0 p-2" placeholder="Password"/>
+            <input 
+                type="password" 
+                class="form-control border-end-0 p-2" 
+                placeholder="Password"
+                v-model="user.Password"
+            />
             <span class="input-group-text border-start-0 bg-transparent hover-pointer p-2">#</span>
         </div>
 
@@ -37,12 +47,46 @@
 </template>
 
 <script>
+
+import AuthService from "../services/authService";
+
 export default{
     name: 'LogInForm',
+    data(){
+        return{
+            user: {
+                Email : '',
+                Password : ''
+            }
+        }
+    },
     methods: {
-        Login(e){
-            e.preventDefault();
-            this.$router.push("/home");
+        async Login(e){
+
+            try{
+                e.preventDefault();
+
+                if(this.user.Email.trim() === "" ){
+                    console.log("Email cannot be empty");
+                    return;
+                }
+
+                if(this.user.Password.trim() === ""){
+                    console.log("Password cannot be empty");
+                    return;
+                }
+
+                const response = await  AuthService.loginUser(this.user);
+
+                console.log(response, "heyyys");
+
+                //this.$router.push("/home");
+
+            }
+            catch(err){
+                console.log(err.message, err);
+            }
+            
         }
     }
 }
