@@ -58,9 +58,9 @@ namespace Moodify.Api.Controllers
 
                 return Ok(_user);
             }
-            catch (VerificationException ex)
+            catch (VerificationException)
             {
-                return StatusCode(401, new { message = ex.Message });
+                return StatusCode(401, new { message = "Login failed. Please make sure your email and password are correct." });
             }
             catch (Exception ex)
             {

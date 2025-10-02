@@ -42,12 +42,17 @@
             />
             <span class="input-group-text border-start-0 bg-transparent hover-pointer p-2">#</span>
         </div>
-
+        <p class="text-danger">{{ error }}</p>
         <button 
             type="submit" 
             class="btn btn-outline-success rounded-2 w-50 align-self-center mt-4"
             @click="SignIn">
-                Sign In
+                <div v-if="isLoading" id="spinner" class="text-center">
+                  <div class="spinner-border text-primary" role="status">
+                    <span class="visually-hidden">Loading...</span>
+                  </div>
+                </div>
+                <p v-else>Sign In</p>
         </button>
         
         <div class="d-flex flex-row justify-content-center mt-5">
@@ -67,30 +72,51 @@
 <script>
 export default{
     name: 'SignInForm',
+    props: {
+        error:{
+            type: String,
+            default: ''
+        },
+        isLoading: {
+            type: Boolean,
+            default: false
+        },
+        response: {
+            type: Object,
+            default: {}
+        }
+    },
     methods: {
         SignIn(e){
             e.preventDefault();
+            this.$emit("toggleIsLoading","signIn", true);
 
+            if(this.user.username.trim() === ""){
+                this.$emit("setError","signIn", "Username cannot be empty");
+                this.$emit("toggleIsLoading","signIn", false);
+                return;
+            }
 
-            if(this.user.username.trim() === "" || this.user.email.trim() === ""){
-                console.log("Username or Email cannot be empty");
+            if(this.user.email.trim() === ""){
+                this.$emit("setError","signIn", "Email cannot be empty");
+                this.$emit("toggleIsLoading","signIn", false);
                 return;
             }
 
             if(!this.doesPasswordMeetRequirements(this.pw)){
-                console.log("Password does not meet the minimum requirements!");
+                this.$emit("setError","signIn", "Password does not meet the minimum requirements!");
+                this.$emit("toggleIsLoading","signIn", false);
                 return;
             }
 
             if(!this.validatePaswords(this.pw, this.confirmPw)){
-                console.log("Confirm password does not match password!");
+                this.$emit("setError","signIn", "Confirm password does not match password!");
+                this.$emit("toggleIsLoading","signIn", false);
                 return;
             }
 
-            this.$emit("AuthUser", this.user);
-
-
-            this.$router.push("/home");
+            this.$emit("registerUser", this.user);
+            
         },
         validatePaswords(password, confirmPassword){
 

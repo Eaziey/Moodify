@@ -9,7 +9,7 @@ export default{
         return axios.post(`${Api_Base_URL}/api/Auth/signIn`,UserInfo);
     },
 
-    loginUser(UserInfo){
+    loginUserAsync(UserInfo){
          return axios.post(`${Api_Base_URL}/api/Auth/logIn`,UserInfo);
     }
 }

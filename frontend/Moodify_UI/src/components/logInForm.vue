@@ -23,13 +23,21 @@
             />
             <span class="input-group-text border-start-0 bg-transparent hover-pointer p-2">#</span>
         </div>
+        <p class="text-danger">{{ error }}</p>
 
         <button 
             type="submit" 
             class="btn btn-outline-success rounded-2 w-50 align-self-center mt-4"
             @click="Login"
         >
-            Log In
+            
+            
+            <div v-if="isLoading" id="spinner" class="text-center">
+              <div class="spinner-border text-primary" role="status">
+                <span class="visually-hidden">Loading...</span>
+              </div>
+            </div>
+            <p v-else>Log In</p>
         </button>
         
         <div class="d-flex flex-row justify-content-center mt-5">
@@ -48,10 +56,22 @@
 
 <script>
 
-import AuthService from "../services/authService";
-
 export default{
     name: 'LogInForm',
+    props: {
+        error:{
+            type: String,
+            default: ''
+        },
+        isLoading: {
+            type: Boolean,
+            default: false
+        },
+        response: {
+            type: Object,
+            default: {}
+        }
+    },
     data(){
         return{
             user: {
@@ -66,25 +86,31 @@ export default{
             try{
                 e.preventDefault();
 
+                this.$emit("toggleIsLoading","logIn" ,true);
+
                 if(this.user.Email.trim() === "" ){
-                    console.log("Email cannot be empty");
+                    this.$emit("setError","logIn", "Email cannot be empty");
+                    this.$emit("toggleIsLoading","logIn", false);
                     return;
                 }
 
                 if(this.user.Password.trim() === ""){
-                    console.log("Password cannot be empty");
+                    this.$emit("setError","logIn", "Password cannot be empty");
+                    this.$emit("toggleIsLoading","logIn", false);
                     return;
                 }
+        
+                this.$emit("loginUser", this.user);
+                
 
-                const response = await  AuthService.loginUser(this.user);
-
-                console.log(response, "heyyys");
-
-                //this.$router.push("/home");
+                
+                
 
             }
             catch(err){
-                console.log(err.message, err);
+                this.$emit("setError","logIn", err.message);
+                this.$emit("toggleIsLoading","logIn", false);
+                
             }
             
         }
