@@ -4,6 +4,7 @@
         <div class="w-100 border border-2 border-danger">
             <LogInForm
                 @loginUser = "logIn"
+                @spotifyLogin = "spotifyLogin"
                 @toggleIsLoading="toggleIsLoading"
                 @setError="setError"
                 :isLoading="loginIsLoading"
@@ -89,6 +90,14 @@ export default {
             }
             
            
+        },
+        async spotifyLogin(){
+            try{
+                await authService.spotifyLogin();
+            }
+            catch(err){
+                console.log(err);
+            }
         },
         toggleIsLoading(location, isLoading){
             //console.log("toggle clicked")

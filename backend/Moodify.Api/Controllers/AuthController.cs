@@ -4,7 +4,6 @@ using Moodify.Api.Services.IServices;
 using Moodify.Api.Dtos;
 using System.Security;
 
-
 namespace Moodify.Api.Controllers
 {
     [ApiController]
@@ -12,10 +11,12 @@ namespace Moodify.Api.Controllers
     public class AuthController : ControllerBase
     {
         private readonly IAuthService _authService;
+        private readonly ISpotifyAuthService _spotifyAuthService;
 
-        public AuthController(IAuthService authService)
+        public AuthController(IAuthService authService, ISpotifyAuthService spotifyAuthService)
         {
             _authService = authService;
+            _spotifyAuthService = spotifyAuthService;
         }
 
 
@@ -66,7 +67,44 @@ namespace Moodify.Api.Controllers
             {
                 return BadRequest(new { message = ex.Message });
             }
+
+        }
+
+        [HttpGet("spotify-login")]
+        public IActionResult SportifyLogin()
+        {
+
+            var spotifyUrl = _spotifyAuthService.SpotifyLogin();
+
+            return Redirect(spotifyUrl);
+        }
+
+        [HttpGet("spotify-callback")]
+        public async Task<IActionResult> SpotifyCallback([FromQuery] string code)
+        {
+            try
+            {
+                //var playlists = await _spotifyAuthService.SpotifyCallBack(code);
+                //Console.WriteLine(code);
+                
+                var result = await _spotifyAuthService.SpotifyCallBack(code);
+
+                if (!result.Success)
+                    return BadRequest(new { message = result.Message });
             
+                return Ok(result);
+
+
+            }
+            catch (ArgumentException ex)
+            {
+                return BadRequest(new { message = ex.Message});
+            }
+            catch (Exception ex)
+            {
+                return BadRequest(new { message = "Spotify login failed: " + ex.Message });
+            }
+
         }
 
     }

@@ -11,5 +11,9 @@ export default{
 
     loginUserAsync(UserInfo){
          return axios.post(`${Api_Base_URL}/api/Auth/logIn`,UserInfo);
+    },
+
+    spotifyLogin(){
+        window.location.href =`${Api_Base_URL}/api/Auth/spotify-login`;
     }
 }

@@ -7,6 +7,10 @@ using Moodify.Api.Services.IServices;
 
 var builder = WebApplication.CreateBuilder(args);
 
+
+//Add Configurations to the container
+builder.Configuration.AddUserSecrets<Program>();
+
 // Add services to the container.
 // Learn more about configuring Swagger/OpenAPI at https://aka.ms/aspnetcore/swashbuckle
 builder.Services.AddEndpointsApiExplorer();
@@ -25,6 +29,7 @@ builder.Services.AddScoped<IUserService, UserService>();
 builder.Services.AddScoped<IPlaylistService, PlaylistService>();
 builder.Services.AddScoped<ITrackService, TrackService>();
 builder.Services.AddScoped<IAuthService, AuthService>();
+builder.Services.AddScoped<ISpotifyAuthService, SpotifyAuthService>();
 
 builder.Services.AddCors(options =>
 {
