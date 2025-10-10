@@ -16,17 +16,30 @@ namespace Moodify.Api.Services {
             _config = config;
         }
 
+        public string GetSpotifyUrl(string state)
+        {
+            var clientID = _config["Spotify:ClientId"];
+            //var clientSecret = _config["Spotify:ClientSecret"];
+            var redirectUri = _config["Spotify:RedirectUri"];
+            var scopes = "playlist-read-private playlist-read-collaborative user-read-email";
+
+            var spotifyUrl = $"https://accounts.spotify.com/authorize?response_type=code&client_id={clientID}&scope={Uri.EscapeDataString(scopes)}&redirect_uri={Uri.EscapeDataString(redirectUri)}&show_dialog=true&state={state}";
+
+            return spotifyUrl;
+            
+        }
+
         public string SpotifyLogin()
         {
             var clientID = _config["Spotify:ClientId"];
             //var clientSecret = _config["Spotify:ClientSecret"];
             var redirectUri = _config["Spotify:RedirectUri"];
-            var scopes = "playlist-read-private playlist-read-collaborative";
+            var scopes = "playlist-read-private playlist-read-collaborative user-read-email";
 
-            var spotifyUrl = $"https://accounts.spotify.com/authorize?response_type=code&client_id={clientID}&scope={Uri.EscapeDataString(scopes)}&redirect_uri={Uri.EscapeDataString(redirectUri)}";
+            var spotifyUrl = $"https://accounts.spotify.com/authorize?response_type=code&client_id={clientID}&scope={Uri.EscapeDataString(scopes)}&redirect_uri={Uri.EscapeDataString(redirectUri)}&show_dialog=true";
 
             return spotifyUrl;
-            
+
         }
 
         public async Task<SpotifyLoginResultDTO> SpotifyCallBack(string code)
@@ -82,7 +95,16 @@ namespace Moodify.Api.Services {
 
             var tokenData = JsonSerializer.Deserialize<SpotifyTokenResponseDTO>(content) ?? throw new Exception("Spotify login failed. TokenData is null");
 
-            return new SpotifyLoginResultDTO { Success = true, Message = "Spotify login successful", Token = tokenData };
+            httpClient.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", tokenData.AccessToken);
+
+            var userResponse = await httpClient.GetAsync("https://api.spotify.com/v1/me");
+            var userContent = await userResponse.Content.ReadAsStringAsync();
+
+            Console.WriteLine($"User Content: {userContent}");
+
+            var userData = JsonSerializer.Deserialize<SpotifyUserDto>(userContent);
+
+            return new SpotifyLoginResultDTO { Success = true, Message = "Spotify login successful", Token = tokenData, SpotifyUserData = userData };
         
         }
     }

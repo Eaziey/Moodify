@@ -7,6 +7,8 @@ using Moodify.Api.Dtos;
 using System.Text.RegularExpressions;
 using Microsoft.AspNetCore.Http.HttpResults;
 using System.Security;
+using Microsoft.AspNetCore.Mvc;
+
 
 
 namespace Moodify.Api.Services
@@ -18,19 +20,24 @@ namespace Moodify.Api.Services
         private const int iterations = 350000;
         private readonly IAuthRepository _authRepository;
         private readonly IUserRepository _userRepository;
+
+        private readonly ISpotifyAuthService _spotifyAuthService;
         private static readonly HashAlgorithmName _hashAlgorithm = HashAlgorithmName.SHA256;
 
-        public AuthService(IAuthRepository authRepository, IUserRepository userRepository)
+        public AuthService(IAuthRepository authRepository, IUserRepository userRepository, ISpotifyAuthService spotifyAuthService)
         {
             _authRepository = authRepository;
             _userRepository = userRepository;
+            _spotifyAuthService = spotifyAuthService;
         }
 
         public async Task<UserDto?> VarifyUserLoginDetailsAsync(UserLoginDto user)
         {
+
+
             var _user = await _userRepository.GetByEmailAsync(user.Email);
 
-            if(_user == null)
+            if (_user == null)
             {
                 throw new UnauthorizedAccessException("User not found");
             }
@@ -53,7 +60,8 @@ namespace Moodify.Api.Services
 
         }
 
-        public async Task<UserDto?> AddUserAsync(UserRegistrationDto user) {
+        public async Task<UserDto?> AddUserAsync(UserRegistrationDto user)
+        {
 
             var _user = await _userRepository.GetByEmailAsync(user.Email);
 
@@ -73,10 +81,11 @@ namespace Moodify.Api.Services
                 Salt = Convert.ToHexString(salt)
             };
 
+
             User normalisedUser = NormaliseUserDetails(newUser);
             await _userRepository.AddAsync(normalisedUser);
             var ret = await _userRepository.SaveChangesAsync();
-            
+
 
             if (!ret)
             {
@@ -96,9 +105,31 @@ namespace Moodify.Api.Services
                 Username = retUser.Username,
                 Email = retUser.Email
             };
-                      
+
 
             return _userDto;
+        }
+
+        public async Task<User?> UpdateSpotifyDetailsAsync(Guid Id, string? SpotifyId = null, string? SpotifyEmail = null, string? SpotifyDisplayName = null)
+        {
+
+            /*var existingUser = await _repository.GetByIdAsync(user.Id);
+
+            if (user == null || existingUser != null)
+            {
+                return false;
+            }*/
+
+            var result = await _userRepository.UpdateSpotifyDetailsAsync(Id, SpotifyId, SpotifyEmail, SpotifyDisplayName, DateTime.UtcNow);
+
+            if (result == false)
+            {
+                throw new Exception("Something went wrong. Could not update spotify user details.");
+            }
+
+            var user = await _userRepository.GetByIdAsync(Id);
+
+            return user;
         }
 
         public User NormaliseUserDetails(User user)
@@ -139,6 +170,18 @@ namespace Moodify.Api.Services
 
             return CryptographicOperations.FixedTimeEquals(hashToCompare, Convert.FromHexString(hash));
 
+        }
+
+        public async Task<User?> GetUserBySpotifyIdAsync(string SpotifyId)
+        {
+            if (SpotifyId == "")
+            {
+                return null;
+            }
+
+            var user = await _userRepository.GetBySpotifyIdAsync(SpotifyId);
+
+            return user;
         }
     }
 }

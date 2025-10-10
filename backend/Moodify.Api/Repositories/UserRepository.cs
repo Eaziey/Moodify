@@ -24,12 +24,40 @@ namespace Moodify.Api.Repositories
             return await _context.Users.FirstOrDefaultAsync(user => user.Email == email);
         }
 
+        public async Task<User?> GetBySpotifyIdAsync(string SpotifyId)
+        {
+            return await _context.Users.FirstOrDefaultAsync(user => user.SpotifyId == SpotifyId);
+        }
+
         public async Task AddAsync(User user)
         {
             await _context.Users.AddAsync(user);
         }
         public async Task<bool> SaveChangesAsync()
         {
+            return await _context.SaveChangesAsync() > 0;
+        }
+
+        public async Task<bool> UpdateSpotifyDetailsAsync(Guid Id, string? SpotifyId = null, string? SpotifyEmail = null, string? SpotifyDisplayName = null, DateTime? SpotifyLinkedAt = null )
+        {
+            var user = await GetByIdAsync(Id);
+
+            if (user == null)
+            {
+                return false;
+            }
+
+            user.SpotifyId = SpotifyId ?? user.SpotifyId;
+            user.SpotifyEmail = SpotifyEmail ?? user.SpotifyEmail;
+            user.SpotifyDisplayName = SpotifyDisplayName ?? user.SpotifyDisplayName;
+            user.LastModifiedAt = DateTime.UtcNow;
+            
+            if (SpotifyId != null || SpotifyEmail != null || SpotifyDisplayName != null || SpotifyLinkedAt != null)
+            {
+                user.SpotifyLinkedAt = SpotifyLinkedAt;
+            }
+
+
             return await _context.SaveChangesAsync() > 0;
         }
     } 

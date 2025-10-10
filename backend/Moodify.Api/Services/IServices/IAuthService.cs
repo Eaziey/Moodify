@@ -11,7 +11,10 @@ namespace Moodify.Api.Services.IServices{
         User NormaliseUserDetails(User user);
         string SaltAndHashPassword(string password, out byte[] salt);
 
-        bool VarifyPassword(string password, string hash, byte[] salt );
+        bool VarifyPassword(string password, string hash, byte[] salt);
+
+        Task<User?> UpdateSpotifyDetailsAsync(Guid Id, string? SpotifyId = null, string? SpotifyEmail = null, string? SpotifyDisplayName = null);
+        Task<User?> GetUserBySpotifyIdAsync(string SpotifyId);
     
     }
 }

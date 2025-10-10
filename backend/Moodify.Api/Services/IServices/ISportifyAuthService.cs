@@ -4,7 +4,8 @@ using Moodify.Api.Dtos;
 namespace Moodify.Api.Services.IServices{
     public interface ISpotifyAuthService
     {
-        String SpotifyLogin();
+        string SpotifyLogin();
+        string GetSpotifyUrl(string state);
 
         Task<SpotifyLoginResultDTO> SpotifyCallBack(string code);
         

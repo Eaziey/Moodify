@@ -6,12 +6,18 @@ namespace Moodify.Api.Models
     public class User
     {
         public Guid Id { get; set; }
+        
         public string Username { get; set; } = null!;
 
         public string NormalisedUsername { get; set; } = null!;
         
         public string Email { get; set; } = null!;
 
+        public string? SpotifyId { get; set; } = null;
+        public string? SpotifyEmail { get; set; } = null;
+        public string? SpotifyDisplayName { get; set; } = null;
+
+        public DateTime? SpotifyLinkedAt { get; set; } = null;
         public string Password { get; set; } = null!;
 
         public string Salt { get; set;  } = null!;

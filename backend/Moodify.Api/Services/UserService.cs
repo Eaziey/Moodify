@@ -35,6 +35,18 @@ namespace Moodify.Api.Services
 
             return user;
         }
+
+        public async Task<User?> GetUserBySpotifyIdAsync(string spotifyId)
+        {
+            if (spotifyId == "")
+            {
+                return null;
+            }
+
+            var user = await _repository.GetBySpotifyIdAsync(spotifyId);
+
+            return user;
+        }
         public async Task<bool> AddUserAsync(User user)
         {
 
@@ -52,6 +64,28 @@ namespace Moodify.Api.Services
             var result = await _repository.SaveChangesAsync();
 
             return result;
+        }
+
+        public async Task<User?> UpdateSpotifyDetailsAsync(Guid Id, string? SpotifyId = null, string? SpotifyEmail = null, string? SpotifyDisplayName = null)
+        {
+
+            /*var existingUser = await _repository.GetByIdAsync(user.Id);
+
+            if (user == null || existingUser != null)
+            {
+                return false;
+            }*/
+
+            var result = await _repository.UpdateSpotifyDetailsAsync(Id, SpotifyId,SpotifyEmail, SpotifyDisplayName, DateTime.UtcNow);
+
+            if (result == false)
+            {
+                throw new Exception("Something went wrong. Could not update spotify user details.");
+            }
+
+            var user = await _repository.GetByIdAsync(Id);
+            
+            return user;
         }
 
         
