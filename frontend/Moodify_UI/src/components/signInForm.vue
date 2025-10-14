@@ -46,7 +46,7 @@
         <button 
             type="submit" 
             class="btn btn-outline-success rounded-2 w-50 align-self-center mt-4"
-            @click="SignIn">
+            @click="OpenModal">
                 <div v-if="isLoading" id="spinner" class="text-center">
                   <div class="spinner-border text-primary" role="status">
                     <span class="visually-hidden">Loading...</span>
@@ -54,6 +54,10 @@
                 </div>
                 <p v-else>Sign In</p>
         </button>
+        <SpotifySignInModal 
+            ref="spotifySignInModal"
+            @integrate = "SetIntergrateAndSignIn"
+        />
         
         <div class="d-flex flex-row justify-content-center mt-5">
             <p class="align-self-center">Or</p>
@@ -70,8 +74,13 @@
 </template>
 
 <script>
+import SpotifySignInModal from './spotifySignInModal.vue';
+
 export default{
     name: 'SignInForm',
+    components: {
+        SpotifySignInModal,
+    },
     props: {
         error:{
             type: String,
@@ -87,8 +96,9 @@ export default{
         }
     },
     methods: {
-        SignIn(e){
-            e.preventDefault();
+        SignIn(){
+            //e.preventDefault();
+            //this.user
             this.$emit("toggleIsLoading","signIn", true);
 
             if(this.user.username.trim() === ""){
@@ -141,6 +151,16 @@ export default{
             } 
 
             return this.strongPasswordRegex.test(password);
+        },
+        OpenModal(e){
+            e.preventDefault();
+            this.$refs.spotifySignInModal.openModal();
+        },
+        SetIntergrateAndSignIn(integrate){
+            this.user.integrate = integrate
+
+            console.log(this.user);
+            this.SignIn();
         }
     },
     data(){
@@ -148,7 +168,8 @@ export default{
             user : {
                 username: '',
                 email: '',
-                password: ''
+                password: '',
+                integrate: false
             },
             pw: '',
             confirmPw: '',

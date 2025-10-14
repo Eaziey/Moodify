@@ -35,12 +35,7 @@ namespace Moodify.Api.Services
         {
 
 
-            var _user = await _userRepository.GetByEmailAsync(user.Email);
-
-            if (_user == null)
-            {
-                throw new UnauthorizedAccessException("User not found");
-            }
+            var _user = await _userRepository.GetByEmailAsync(user.Email) ?? throw new UnauthorizedAccessException("User not found");
 
             var isVarified = VarifyPassword(user.Password, _user.Password, Convert.FromHexString(_user.Salt));
 
@@ -89,16 +84,11 @@ namespace Moodify.Api.Services
 
             if (!ret)
             {
-                throw new Exception("Something went wrong. Could not save user in db.");
+                throw new Exception("Could not save user in db.");
             }
 
-            var retUser = await _userRepository.GetByEmailAsync(normalisedUser.Email);
-
-            if (retUser == null)
-            {
-                throw new Exception("Something went wrong. Could not get User from db.");
-            }
-
+            var retUser = await _userRepository.GetByEmailAsync(normalisedUser.Email) ?? throw new Exception("Something went wrong. Could not get User from db.");
+            
             UserDto _userDto = new()
             {
                 Id = retUser.Id,
@@ -120,11 +110,11 @@ namespace Moodify.Api.Services
                 return false;
             }*/
 
-            var result = await _userRepository.UpdateSpotifyDetailsAsync(Id, SpotifyId, SpotifyEmail, SpotifyDisplayName, DateTime.UtcNow);
+            var updatedUser = await _userRepository.UpdateSpotifyDetailsAsync(Id, SpotifyId, SpotifyEmail, SpotifyDisplayName, DateTime.UtcNow);
 
-            if (result == false)
+            if (updatedUser == false)
             {
-                throw new Exception("Something went wrong. Could not update spotify user details.");
+                throw new UnauthorizedAccessException("User not found after update.");
             }
 
             var user = await _userRepository.GetByIdAsync(Id);
@@ -176,10 +166,10 @@ namespace Moodify.Api.Services
         {
             if (SpotifyId == "")
             {
-                return null;
+                throw new Exception("SpotifyId is null.");
             }
 
-            var user = await _userRepository.GetBySpotifyIdAsync(SpotifyId);
+            var user = await _userRepository.GetBySpotifyIdAsync(SpotifyId)?? throw new UnauthorizedAccessException("User not found");;
 
             return user;
         }

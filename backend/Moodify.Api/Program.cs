@@ -37,7 +37,8 @@ builder.Services.AddCors(options =>
     {
         policy.WithOrigins("https://opulent-space-giggle-qj7pgx5r9rx3x9pj-5173.app.github.dev")
             .AllowAnyHeader()
-            .AllowAnyMethod();
+            .AllowAnyMethod()
+            .AllowCredentials();
     });
 });
 
@@ -50,11 +51,10 @@ if (app.Environment.IsDevelopment())
     app.UseSwaggerUI();
 }
 
-
-app.UseCors("AllowFrontend");  
-app.MapControllers();
-app.UseAuthorization();
 app.UseHttpsRedirection();
+app.UseCors("AllowFrontend");  
+app.UseAuthorization();
+app.MapControllers();
 
 app.Run();
 

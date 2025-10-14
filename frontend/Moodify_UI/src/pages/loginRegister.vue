@@ -53,14 +53,19 @@ export default {
             try{
                 this.signinIsLoading = true;
                 this.signinResponse = await authService.registerUserAsync(user);
-                //console.log(this.signinResponse);
-
+                //this.setError("signIn", this.signinResponse.data );
                 
-                if(this.signinResponse){
+                if (this.signinResponse.data.redirectUrl) {
+                      // Spotify integration: redirect to Spotify authorization
+                    window.location.href = this.signinResponse.data.redirectUrl;
+                    return;
+                }
+                
+                    // Normal flow (no Spotify integration)
                     this.setError("signIn", "");
                     this.toggleIsLoading("signIn", false);
                     this.$router.push("/home");
-                }
+
             }
             catch(err){
                 this.signinError = err.response.data.message;
@@ -91,9 +96,21 @@ export default {
             
            
         },
-        async spotifyLogin(){
+        async spotifyLogin(user){
             try{
-                await authService.spotifyLogin();
+                
+                user.Email = null;
+                user.Password = null;
+                user.UseSpotify = true;
+
+                this.loginResponse = await authService.spotifyLogin(user);
+                this.setError("logIn", this.loginResponse.data );
+
+                if (this.loginResponse.data.redirectUrl) {
+                    // Spotify integration: redirect to Spotify authorization
+                    window.location.href = this.loginResponse.data.redirectUrl;
+                    return;
+                }
             }
             catch(err){
                 console.log(err);

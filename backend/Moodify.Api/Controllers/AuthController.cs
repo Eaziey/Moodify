@@ -31,12 +31,13 @@ namespace Moodify.Api.Controllers
         public async Task<IActionResult> LogInUser([FromBody] UserLoginDto user)
         {
 
+            if (user == null)
+            {
+                return BadRequest("User cannot be null.");
+            }
+
             try
             {
-                if (user == null)
-                {
-                    return BadRequest();
-                }
 
                 /*var _spotifyUser= await _authService.GetUserBySpotifyEmailAsync(user.SpotifyEmail);
 
@@ -54,21 +55,21 @@ namespace Moodify.Api.Controllers
                     Response.Cookies.Append("flow_Type", "login", new CookieOptions
                     {
                         HttpOnly = true,
-                        Secure = !_env.IsDevelopment(),
-                        SameSite = SameSiteMode.Strict,
+                        Secure = true,
+                        SameSite = SameSiteMode.None,
                         Expires = DateTimeOffset.UtcNow.AddMinutes(10)
                     });
 
                     Response.Cookies.Append("spotify_state", state, new CookieOptions
                     {
                         HttpOnly = true,
-                        Secure = !_env.IsDevelopment(),
-                        SameSite = SameSiteMode.Strict,
+                        Secure = true,
+                        SameSite = SameSiteMode.None,
                         Expires = DateTimeOffset.UtcNow.AddMinutes(10)
                     });
 
                     var redirectUrl = _spotifyAuthService.GetSpotifyUrl(state);
-                    return Redirect(redirectUrl);
+                    return Ok(new { redirectUrl });
                 }
 
                 var _user = await _authService.VarifyUserLoginDetailsAsync(user);
@@ -77,23 +78,24 @@ namespace Moodify.Api.Controllers
             }
             catch (UnauthorizedAccessException ex)
             {
-                return StatusCode(401, new { message = ex.Message });
+                return NotFound(new { message = ex.Message });
             }
             catch (Exception ex)
             {
-                return BadRequest(new { message = ex.Message });
+                return StatusCode(500, new { message = $"An unexpected error occurred. {ex.Message}" });
             }
         }
 
         [HttpPost("signIn")]
         public async Task<IActionResult> SignInUser([FromBody] UserRegistrationDto user)
         {
+            if (user == null)
+            {
+                return BadRequest("User cannot be null.");
+            }
+
             try
             {
-                if (user == null)
-                {
-                    return BadRequest("User cannot be null.");
-                }
 
                 var _user = await _authService.AddUserAsync(user);
 
@@ -101,45 +103,46 @@ namespace Moodify.Api.Controllers
                 {
                     var userId = _user.Id.ToString();
                     var state = Guid.NewGuid().ToString();
+                    //Console.WriteLine(state);
 
                     Response.Cookies.Append("user_id", userId, new CookieOptions
                     {
                         HttpOnly = true,
-                        Secure = !_env.IsDevelopment(),
-                        SameSite = SameSiteMode.Strict,
+                        Secure = true,
+                        SameSite = SameSiteMode.None,
                         Expires = DateTimeOffset.UtcNow.AddMinutes(10)
                     });
 
                     Response.Cookies.Append("flow_type", "register", new CookieOptions
                     {
                         HttpOnly = true,
-                        Secure = !_env.IsDevelopment(),
-                        SameSite = SameSiteMode.Strict,
+                        Secure = true,
+                        SameSite = SameSiteMode.None,
                         Expires = DateTimeOffset.UtcNow.AddMinutes(10)
                     });
 
                     Response.Cookies.Append("spotify_state", state, new CookieOptions
                     {
                         HttpOnly = true,
-                        Secure = !_env.IsDevelopment(),
-                        SameSite = SameSiteMode.Strict,
+                        Secure = true,
+                        SameSite = SameSiteMode.None,
                         Expires = DateTimeOffset.UtcNow.AddMinutes(10)
                     });
 
                     var redirectUrl = _spotifyAuthService.GetSpotifyUrl(state);
-                    return Redirect(redirectUrl);
+                    return Ok(new { redirectUrl });
 
                 }
 
-                return Ok(_user);
+                return Redirect("https://opulent-space-giggle-qj7pgx5r9rx3x9pj-5173.app.github.dev/home");
             }
             catch (VerificationException ex)
             {
-                return StatusCode(401, new { message = $"Sign in failed. {ex.Message}" });
+                return Conflict(new { message = $"Sign in failed. {ex.Message}" });
             }
             catch (Exception ex)
             {
-                return BadRequest(new { message = ex.Message });
+                return StatusCode(500, new { message = $"An unexpected error occurred. {ex.Message}" });
             }
 
         }
@@ -154,66 +157,70 @@ namespace Moodify.Api.Controllers
         }
 
         [HttpGet("spotify-callback")]
-        public async Task<IActionResult> SpotifyCallback([FromQuery] string code, [FromBody] string state)
+        public async Task<IActionResult> SpotifyCallback([FromQuery] string code, [FromQuery] string state)
         {
             try
             {
-                //var playlists = await _spotifyAuthService.SpotifyCallBack(code);
-                //Console.WriteLine(code);
 
                 var storedState = Request.Cookies["spotify_state"];
                 var flowType = Request.Cookies["flow_type"];
-                
+
+                //Console.WriteLine("Query state: " + state);
+                //Console.WriteLine("Cookie state: " + storedState);
+
                 if (string.IsNullOrEmpty(state) || state != storedState)
                 {
-                    return Unauthorized("Invalid state");
+                    //Console.WriteLine("STATE2: " + state);
+                    return Unauthorized("Invalid state: " + state);
                 }
-                
+
                 var result = await _spotifyAuthService.SpotifyCallBack(code);
 
                 if (!result.Success)
                 {
-                    return BadRequest(new { message = result.Message });
+                    return Unauthorized(new { message = result.Message });
                 }
 
                 if (result.SpotifyUserData == null)
                 {
-                    return BadRequest(new { message = "Unable to get spotify user data." });
+                    return StatusCode(500, new { message = "Spotify callback succeeded but no user data was returned." });
                 }
 
                 if (flowType == "register")
                 {
-                    var userId = Request.Cookies["user_id"]?? "";
+                    var userId = Request.Cookies["user_id"] ?? "";
 
                     var Id = Guid.Parse(userId);
 
                     var user = await _authService.UpdateSpotifyDetailsAsync(Id, result.SpotifyUserData.SpotifyId, result.SpotifyUserData.Email, result.SpotifyUserData.DisplayName);
+                    //Console.WriteLine(user.Email);
 
-                    return Ok(user);
+                    return Redirect("https://opulent-space-giggle-qj7pgx5r9rx3x9pj-5173.app.github.dev/home");
+                    //return Ok(user);
                 }
                 else if (flowType == "login")
                 {
                     var user = await _authService.GetUserBySpotifyIdAsync(result.SpotifyUserData.SpotifyId ?? "");
 
-                    if(user == null){
-                        return StatusCode(401, new { message = $"Login failed. User not found" });
-                    }
-
                     return Ok(user);
 
                 }
 
-                return BadRequest("Unknown flow Type" );
+                return BadRequest(new { message = $"Unknown flow type: '{flowType}'." });
 
 
             }
             catch (ArgumentException ex)
             {
-                return BadRequest(new { message = ex.Message});
+                return BadRequest(new { message = ex.Message });
+            }
+            catch (UnauthorizedAccessException ex)
+            {
+                return NotFound(new { message = ex.Message });
             }
             catch (Exception ex)
             {
-                return BadRequest(new { message = "Spotify callback failed: " + ex.Message });
+                return StatusCode(500, new { message = "Unexpected error: " + ex.Message });
             }
 
         }

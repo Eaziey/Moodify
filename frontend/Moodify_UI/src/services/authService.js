@@ -6,14 +6,18 @@ export default{
 
     registerUserAsync(UserInfo) {
 
-        return axios.post(`${Api_Base_URL}/api/Auth/signIn`,UserInfo);
+        return axios.post(`${Api_Base_URL}/api/Auth/signIn`,UserInfo, {
+            withCredentials: true
+        });
     },
 
     loginUserAsync(UserInfo){
          return axios.post(`${Api_Base_URL}/api/Auth/logIn`,UserInfo);
     },
 
-    spotifyLogin(){
-        window.location.href =`${Api_Base_URL}/api/Auth/spotify-login`;
+    spotifyLogin(UserInfo){
+        return axios.post(`${Api_Base_URL}/api/Auth/logIn`,UserInfo, {
+            withCredentials: true
+        });
     }
 }

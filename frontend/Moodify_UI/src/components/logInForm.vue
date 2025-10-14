@@ -48,7 +48,7 @@
             
             <button class="btn btn-outline-dark mt-3 me-3 rounded-2 w-50 align-self-center">Google</button>
             <button class="btn btn-outline-primary mt-3 me-3 rounded-2 w-50 align-self-center">Facebook</button>
-            <button class="btn btn-outline-success mt-3 me-3 rounded-2 w-50 align-self-center" @click = "spotifyLogin">Sportify</button>
+            <button class="btn btn-outline-success mt-3 me-3 rounded-2 w-50 align-self-center" @click ="spotifyLogin">Sportify</button>
         </div>
     </form>
 </div>
@@ -77,7 +77,8 @@ export default{
         return{
             user: {
                 Email : '',
-                Password : ''
+                Password : '',
+                UseSpotify: false
             }
         }
     },
@@ -100,12 +101,10 @@ export default{
                     this.$emit("toggleIsLoading","logIn", false);
                     return;
                 }
+
+                this.user.UseSpotify = false;
         
                 this.$emit("loginUser", this.user);
-                
-
-                
-                
 
             }
             catch(err){
@@ -118,8 +117,9 @@ export default{
         async spotifyLogin(e){
             try{
                 e.preventDefault();
-
-                this.$emit("spotifyLogin");
+                this.user.UseSpotify = true;
+                this.$emit("spotifyLogin", this.user);
+                
             }
             catch(err){
                 console.log(err);
