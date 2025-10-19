@@ -111,6 +111,7 @@ export default {
                     window.location.href = this.loginResponse.data.redirectUrl;
                     return;
                 }
+                eks
             }
             catch(err){
                 console.log(err);

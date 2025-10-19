@@ -4,6 +4,7 @@ using Moodify.Api.Services.IServices;
 using Moodify.Api.Dtos;
 using System.Security;
 using System.Text.Json;
+using Microsoft.AspNetCore.Authorization;
 
 namespace Moodify.Api.Controllers
 {
@@ -26,7 +27,7 @@ namespace Moodify.Api.Controllers
             _userService = userService;
         }
 
-
+        [AllowAnonymous]
         [HttpPost("logIn")]
         public async Task<IActionResult> LogInUser([FromBody] UserLoginDto user)
         {
@@ -68,13 +69,29 @@ namespace Moodify.Api.Controllers
                         Expires = DateTimeOffset.UtcNow.AddMinutes(10)
                     });
 
+
                     var redirectUrl = _spotifyAuthService.GetSpotifyUrl(state);
                     return Ok(new { redirectUrl });
                 }
 
-                var _user = await _authService.VarifyUserLoginDetailsAsync(user);
+                var token = await _authService.VarifyUserLoginDetailsAsync(user);
 
-                return StatusCode(201, _user);
+                
+                if (string.IsNullOrEmpty(token))
+                {
+                    return StatusCode(500, new { message = "Unexpected error: login token was null or empty." });
+                }
+
+
+                Response.Cookies.Append("jwt", token, new CookieOptions
+                {
+                    HttpOnly = true,
+                    Secure = true,
+                    SameSite = SameSiteMode.None,
+                    Expires = DateTimeOffset.UtcNow.AddHours(2)
+                });
+                
+                return StatusCode(201, new {message = "Login successful."});
             }
             catch (UnauthorizedAccessException ex)
             {
@@ -86,6 +103,7 @@ namespace Moodify.Api.Controllers
             }
         }
 
+        [AllowAnonymous]
         [HttpPost("signIn")]
         public async Task<IActionResult> SignInUser([FromBody] UserRegistrationDto user)
         {
@@ -97,13 +115,33 @@ namespace Moodify.Api.Controllers
             try
             {
 
-                var _user = await _authService.AddUserAsync(user);
+                var _userDataAndToken = await _authService.AddUserAsync(user);
+
+                var token = _userDataAndToken.Token;
+                var _user = _userDataAndToken.User;
+
+                if (string.IsNullOrEmpty(token))
+                {
+                    return StatusCode(500, new { message = "Unexpected error: signIn token was null or empty." });
+                }
+
+
+                Response.Cookies.Append("jwt", token, new CookieOptions
+                {
+                    HttpOnly = true,
+                    Secure = true,
+                    SameSite = SameSiteMode.None,
+                    Expires = DateTimeOffset.UtcNow.AddHours(2)
+                });
+
 
                 if (user.Integrate == true && _user != null)
                 {
                     var userId = _user.Id.ToString();
                     var state = Guid.NewGuid().ToString();
                     //Console.WriteLine(state);
+
+                    
 
                     Response.Cookies.Append("user_id", userId, new CookieOptions
                     {
@@ -129,12 +167,22 @@ namespace Moodify.Api.Controllers
                         Expires = DateTimeOffset.UtcNow.AddMinutes(10)
                     });
 
+                    /*Response.Cookies.Append("token", token, new CookieOptions
+                    {
+                        HttpOnly = true,
+                        Secure = true,
+                        SameSite = SameSiteMode.None,
+                        Expires = DateTimeOffset.UtcNow.AddMinutes(10)
+                    });*/
+
                     var redirectUrl = _spotifyAuthService.GetSpotifyUrl(state);
                     return Ok(new { redirectUrl });
 
                 }
 
-                return Redirect("https://opulent-space-giggle-qj7pgx5r9rx3x9pj-5173.app.github.dev/home");
+                //return Redirect("https://opulent-space-giggle-qj7pgx5r9rx3x9pj-5173.app.github.dev/home?token={token}");
+
+                return StatusCode(201,new {message = "Sign in successful"});
             }
             catch (VerificationException ex)
             {
@@ -156,6 +204,7 @@ namespace Moodify.Api.Controllers
             return Redirect(spotifyUrl);
         }
 
+        [AllowAnonymous]
         [HttpGet("spotify-callback")]
         public async Task<IActionResult> SpotifyCallback([FromQuery] string code, [FromQuery] string state)
         {
@@ -190,19 +239,32 @@ namespace Moodify.Api.Controllers
                 {
                     var userId = Request.Cookies["user_id"] ?? "";
 
+                    //var token = Request.Cookies["jwt"] ?? "";
+
                     var Id = Guid.Parse(userId);
 
-                    var user = await _authService.UpdateSpotifyDetailsAsync(Id, result.SpotifyUserData.SpotifyId, result.SpotifyUserData.Email, result.SpotifyUserData.DisplayName);
-                    //Console.WriteLine(user.Email);
+                    var isUserUpdated = await _authService.UpdateSpotifyDetailsAsync(Id, result.SpotifyUserData.SpotifyId, result.SpotifyUserData.Email, result.SpotifyUserData.DisplayName);
 
-                    return Redirect("https://opulent-space-giggle-qj7pgx5r9rx3x9pj-5173.app.github.dev/home");
-                    //return Ok(user);
+                    return StatusCode(201, new { message = "Sign in successful." });
                 }
                 else if (flowType == "login")
                 {
-                    var user = await _authService.GetUserBySpotifyIdAsync(result.SpotifyUserData.SpotifyId ?? "");
+                    var token = await _authService.GetUserTokenBySpotifyIdAsync(result.SpotifyUserData.SpotifyId ?? "");
 
-                    return Ok(user);
+                    if (string.IsNullOrEmpty(token))
+                    {
+                        return StatusCode(500, new { message = "Unexpected error: login token was null or empty." });
+                    }
+
+                    Response.Cookies.Append("jwt", token, new CookieOptions
+                    {
+                        HttpOnly = true,
+                        Secure = true,
+                        SameSite = SameSiteMode.None,
+                        Expires = DateTimeOffset.UtcNow.AddHours(2)
+                    });
+
+                    return StatusCode(201, new { message = "Login successful." });
 
                 }
 
@@ -224,6 +286,15 @@ namespace Moodify.Api.Controllers
             }
 
         }
+
+        
+        [HttpPost("logout")]
+        public IActionResult Logout()
+        {
+            Response.Cookies.Delete("jwt");
+            return Ok(new { message = "Logged out successfully" });
+        }
+
 
     }
 }

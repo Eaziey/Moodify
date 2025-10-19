@@ -1,4 +1,7 @@
+using System.Text;
+using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.IdentityModel.Tokens;
 using Moodify.Api.Data;
 using Moodify.Api.Repositories;
 using Moodify.Api.Repositories.Interfaces;
@@ -7,6 +10,9 @@ using Moodify.Api.Services.IServices;
 
 var builder = WebApplication.CreateBuilder(args);
 
+//JWT settings
+var jwtSettings = builder.Configuration.GetSection("jwt");
+var key = builder.Configuration["Jwt:Key"];
 
 //Add Configurations to the container
 builder.Configuration.AddUserSecrets<Program>();
@@ -42,6 +48,28 @@ builder.Services.AddCors(options =>
     });
 });
 
+builder.Services.AddAuthentication(options =>
+{
+
+    options.DefaultAuthenticateScheme = JwtBearerDefaults.AuthenticationScheme;
+    options.DefaultChallengeScheme = JwtBearerDefaults.AuthenticationScheme;
+
+}).AddJwtBearer(options =>
+{
+
+    options.TokenValidationParameters = new TokenValidationParameters
+    {
+        ValidateIssuer = true,
+        ValidateAudience = true,
+        ValidateLifetime = true,
+        ValidateIssuerSigningKey = true,
+        ValidIssuer = jwtSettings["Issuer"],
+        ValidAudience = jwtSettings["Audience"],
+        IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(key))
+    };
+
+});
+
 var app = builder.Build();
 
 // Configure the HTTP request pipeline.
@@ -52,7 +80,8 @@ if (app.Environment.IsDevelopment())
 }
 
 app.UseHttpsRedirection();
-app.UseCors("AllowFrontend");  
+app.UseCors("AllowFrontend");
+app.UseAuthentication();
 app.UseAuthorization();
 app.MapControllers();
 

@@ -6,15 +6,17 @@ namespace Moodify.Api.Services.IServices{
     public interface IAuthService
     {
 
-        Task<UserDto?> AddUserAsync(UserRegistrationDto user);
-        Task<UserDto?> VarifyUserLoginDetailsAsync(UserLoginDto user);
+        Task<UserLoginReturnDto> AddUserAsync(UserRegistrationDto user);
+        
+        Task<string> VarifyUserLoginDetailsAsync(UserLoginDto user);
         User NormaliseUserDetails(User user);
         string SaltAndHashPassword(string password, out byte[] salt);
 
         bool VarifyPassword(string password, string hash, byte[] salt);
 
-        Task<User?> UpdateSpotifyDetailsAsync(Guid Id, string? SpotifyId = null, string? SpotifyEmail = null, string? SpotifyDisplayName = null);
-        Task<User?> GetUserBySpotifyIdAsync(string SpotifyId);
+        Task<bool> UpdateSpotifyDetailsAsync(Guid Id, string? SpotifyId = null, string? SpotifyEmail = null, string? SpotifyDisplayName = null);
+        Task<string> GetUserTokenBySpotifyIdAsync(string SpotifyId);
+
     
     }
 }

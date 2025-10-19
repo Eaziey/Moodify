@@ -8,6 +8,9 @@ using System.Text.RegularExpressions;
 using Microsoft.AspNetCore.Http.HttpResults;
 using System.Security;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.IdentityModel.Tokens;
+using System.Security.Claims;
+using System.IdentityModel.Tokens.Jwt;
 
 
 
@@ -22,18 +25,24 @@ namespace Moodify.Api.Services
         private readonly IUserRepository _userRepository;
 
         private readonly ISpotifyAuthService _spotifyAuthService;
+
+        private readonly IConfiguration _configuration; 
         private static readonly HashAlgorithmName _hashAlgorithm = HashAlgorithmName.SHA256;
 
-        public AuthService(IAuthRepository authRepository, IUserRepository userRepository, ISpotifyAuthService spotifyAuthService)
+        public AuthService(IAuthRepository authRepository, IUserRepository userRepository, ISpotifyAuthService spotifyAuthService, IConfiguration configuration)
         {
             _authRepository = authRepository;
             _userRepository = userRepository;
             _spotifyAuthService = spotifyAuthService;
+            _configuration = configuration;
         }
 
-        public async Task<UserDto?> VarifyUserLoginDetailsAsync(UserLoginDto user)
+        public async Task<string> VarifyUserLoginDetailsAsync(UserLoginDto user)
         {
-
+            if(user.Email == null || user.Password == null  )
+            {
+                throw new InvalidOperationException("User Email and Password cannot be null");
+            }
 
             var _user = await _userRepository.GetByEmailAsync(user.Email) ?? throw new UnauthorizedAccessException("User not found");
 
@@ -51,11 +60,13 @@ namespace Moodify.Api.Services
                 Email = _user.Email
             };
 
-            return retUser;
+            var token = GenerateJWTToken(retUser);
+
+            return token;
 
         }
 
-        public async Task<UserDto?> AddUserAsync(UserRegistrationDto user)
+        public async Task<UserLoginReturnDto> AddUserAsync(UserRegistrationDto user)
         {
 
             var _user = await _userRepository.GetByEmailAsync(user.Email);
@@ -88,7 +99,7 @@ namespace Moodify.Api.Services
             }
 
             var retUser = await _userRepository.GetByEmailAsync(normalisedUser.Email) ?? throw new Exception("Something went wrong. Could not get User from db.");
-            
+
             UserDto _userDto = new()
             {
                 Id = retUser.Id,
@@ -96,11 +107,19 @@ namespace Moodify.Api.Services
                 Email = retUser.Email
             };
 
+            var token = GenerateJWTToken(_userDto);
 
-            return _userDto;
+            UserLoginReturnDto returnData = new ()
+            {
+                User = _userDto,
+                Token = token
+            };
+
+
+            return returnData;
         }
 
-        public async Task<User?> UpdateSpotifyDetailsAsync(Guid Id, string? SpotifyId = null, string? SpotifyEmail = null, string? SpotifyDisplayName = null)
+        public async Task<bool> UpdateSpotifyDetailsAsync(Guid Id, string? SpotifyId = null, string? SpotifyEmail = null, string? SpotifyDisplayName = null)
         {
 
             /*var existingUser = await _repository.GetByIdAsync(user.Id);
@@ -110,16 +129,28 @@ namespace Moodify.Api.Services
                 return false;
             }*/
 
-            var updatedUser = await _userRepository.UpdateSpotifyDetailsAsync(Id, SpotifyId, SpotifyEmail, SpotifyDisplayName, DateTime.UtcNow);
+            var isUserUpdated = await _userRepository.UpdateSpotifyDetailsAsync(Id, SpotifyId, SpotifyEmail, SpotifyDisplayName, DateTime.UtcNow);
 
-            if (updatedUser == false)
+            if (isUserUpdated == false)
             {
-                throw new UnauthorizedAccessException("User not found after update.");
+                throw new UnauthorizedAccessException("User not found after update.(1,1)");
             }
 
-            var user = await _userRepository.GetByIdAsync(Id);
+            return true;
+        
 
-            return user;
+            /*var user = await _userRepository.GetByIdAsync(Id)?? throw new UnauthorizedAccessException("User not found after update.(1,1)");
+
+            UserDto _user = new()
+            {
+                Id = user.Id,
+                Username = user.Username,
+                Email = user.Email
+            };
+
+            var token = GenerateJWTToken(_user);
+
+            return token;*/
         }
 
         public User NormaliseUserDetails(User user)
@@ -162,16 +193,57 @@ namespace Moodify.Api.Services
 
         }
 
-        public async Task<User?> GetUserBySpotifyIdAsync(string SpotifyId)
+        public async Task<string> GetUserTokenBySpotifyIdAsync(string SpotifyId)
         {
             if (SpotifyId == "")
             {
                 throw new Exception("SpotifyId is null.");
             }
 
-            var user = await _userRepository.GetBySpotifyIdAsync(SpotifyId)?? throw new UnauthorizedAccessException("User not found");;
+            var user = await _userRepository.GetBySpotifyIdAsync(SpotifyId) ?? throw new UnauthorizedAccessException("User not found");
 
-            return user;
+            UserDto _user = new()
+            {
+                Id = user.Id,
+                Username = user.Username,
+                Email = user.Email
+            };
+
+            var token = GenerateJWTToken(_user);
+            
+            return token;
+        }
+
+        private string GenerateJWTToken(UserDto user)
+        {
+            var jwtSettings = _configuration.GetSection("Jwt");
+            var keyString = _configuration["Jwt:Key"];
+
+            if (string.IsNullOrEmpty(keyString))
+            {
+                throw new InvalidOperationException("JWT Key is missing from configuration.");
+            }
+            var key = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(keyString));
+
+            var creds = new SigningCredentials(key, SecurityAlgorithms.HmacSha256);
+
+            var Claims = new[]
+            {
+                new Claim(JwtRegisteredClaimNames.Sub, user.Username?? ""),
+                new Claim(JwtRegisteredClaimNames.Email, user.Email),
+                new Claim("id", user.Id.ToString()),
+                new Claim(JwtRegisteredClaimNames.Jti, Guid.NewGuid().ToString())
+            };
+
+            var token = new JwtSecurityToken(
+                issuer: jwtSettings["Issuer"],
+                audience: jwtSettings["Audience"],
+                claims: Claims,
+                expires: DateTime.UtcNow.AddMinutes(Convert.ToDouble(jwtSettings["ExpireMinutes"])),
+                signingCredentials: creds
+            );
+
+            return new JwtSecurityTokenHandler().WriteToken(token);
         }
     }
 }
