@@ -1,0 +1,11 @@
+{
+  "name": "Vue Dev Container",
+  "customizations": {
+    "vscode": {
+      "extensions": [
+        "-Vue.volar",
+        "mubaidr.vuejs-extension-pack"
+      ]
+    }
+  }
+}
